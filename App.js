@@ -11,7 +11,10 @@ import LoginScreen from './LoginScreen'; // 로그인 화면
 import RegisterScreen from './RegisterScreen'; // 회원가입 화면
 import { AuthProvider } from './AuthContext'; // AuthContext 추가
 import UserImagesScreen from './UserImagesScreen';
-enableScreens(); // react-native-screens 최적화 활성화
+import ProgressAndImageScreen from './ProgressAndImageScreen'; 
+import { Buffer } from 'buffer'; // Buffer 임포트
+enableScreens(); // react-native-screens 최적화 활성화  
+
 
 const Stack = createStackNavigator();
 
@@ -57,6 +60,13 @@ export default function App() {
               component={DetailPicAndText}
               options={{ title: '상세 정보' }}
             />
+            {/* ProgressAndImageScreen 추가 */}
+            <Stack.Screen
+              name="ProgressAndImage"
+              component={ProgressAndImageScreen}
+              options={{ title: '합성 진행' }}
+            />
+
 
           </Stack.Navigator>
         </NavigationContainer>
