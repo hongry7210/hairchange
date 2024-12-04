@@ -8,6 +8,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentRequest, setCurrentRequest] = useState(null); // 현재 요청 상태 추가
 
     useEffect(() => {
         const loadUser = async () => {
@@ -47,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userId, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ userId, login, logout, isLoading, currentRequest, setCurrentRequest }}>
             {children}
         </AuthContext.Provider>
     );

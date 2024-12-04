@@ -1,4 +1,4 @@
-// src/screens/DetailPicAndText.js
+// DetailPicAndText.js
 
 import React, { useContext } from 'react';
 import {
@@ -34,7 +34,7 @@ const data = [
 ];
 
 const DetailPicAndText = () => {
-  const { userId } = useContext(AuthContext); // AuthContext에서 userId 가져오기
+  const { setCurrentRequest } = useContext(AuthContext); // AuthContext에서 setCurrentRequest 가져오기
   const navigation = useNavigation(); // 네비게이션 훅 사용
 
   // 카드 클릭 시 호출되는 함수
@@ -50,7 +50,10 @@ const DetailPicAndText = () => {
         },
         {
           text: '확인',
-          onPress: () => navigation.navigate('ProgressAndImage', { title }),
+          onPress: () => {
+            setCurrentRequest(title); // 현재 요청 설정
+            navigation.navigate('ProgressAndImage', { title });
+          },
         },
       ],
       { cancelable: true }

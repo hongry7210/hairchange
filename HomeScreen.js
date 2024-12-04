@@ -7,7 +7,7 @@ import Icon from 'react-native-vector-icons/Ionicons'; // 아이콘 사용 시 �
 import { CommonActions } from '@react-navigation/native'; // 네비게이션 초기화를 위해 추가
 
 const HomeScreen = ({ navigation }) => {
-  const { logout } = useContext(AuthContext); // AuthContext에서 logout 함수 가져오기
+  const { logout, currentRequest } = useContext(AuthContext); // AuthContext에서 logout 함수, currentRequest 가져오기
 
   const handleLogout = () => {
     Alert.alert(
@@ -42,6 +42,14 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
+  const handleNavigateProgress = () => {
+    if (currentRequest) {
+      navigation.navigate('ProgressAndImage', { title: currentRequest });
+    } else {
+      Alert.alert('알림', '진행중인 사진 가공이 없습니다!');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>환영합니다!</Text>
@@ -60,7 +68,15 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>저장한 사진 보기</Text>
       </TouchableOpacity>
 
-      {/* 로그아웃 버튼 추가 */}
+      {/* "진행중인 합성 보기" 버튼 */}
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={handleNavigateProgress}
+      >
+        <Text style={styles.buttonText}>진행중인 합성 보기</Text>
+      </TouchableOpacity>
+
+      {/* 로그아웃 버튼 */}
       <TouchableOpacity 
         style={[styles.button, styles.logoutButton]} 
         onPress={handleLogout}
