@@ -4,7 +4,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from './AuthContext'; // AuthContext 임포트
-
 const UserImagesScreen = () => {
   const { userId } = useContext(AuthContext); // AuthContext에서 userId 가져오기
   const [images, setImages] = useState([]); // 사용자 이미지 목록
@@ -24,7 +23,12 @@ const UserImagesScreen = () => {
       });
 
       if (response.data && Array.isArray(response.data.images)) {
-        setImages(response.data.images); // 서버에서 받은 이미지 목록 설정
+        // 서버에서 받은 이미지 경로를 URL로 변환
+        const updatedImages = response.data.images.map((image) => ({
+          ...image,
+          uri: `http://ec2-3-36-143-220.ap-northeast-2.compute.amazonaws.com/image_storage/synthesis/${image.fileName}`,
+        }));
+        setImages(updatedImages); // 업데이트된 이미지 목록 설정
       } else {
         Alert.alert('알림', '저장된 이미지가 없습니다.');
       }
@@ -62,6 +66,7 @@ const UserImagesScreen = () => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

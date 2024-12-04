@@ -47,7 +47,7 @@ const ImagePickerScreen = () => {
                     setSelectedImage(null);
                     return;
                 }
-
+                Alert.alert(asset.fileName);
                 setSelectedImage(asset);
             }
         });
