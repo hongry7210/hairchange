@@ -13,6 +13,10 @@ import { AuthProvider } from './AuthContext'; // AuthContext 추가
 import UserImagesScreen from './UserImagesScreen';
 import ProgressAndImageScreen from './ProgressAndImageScreen'; 
 import { Buffer } from 'buffer'; // Buffer 임포트
+
+global.Buffer = Buffer; // Buffer 전역 설정
+
+
 enableScreens(); // react-native-screens 최적화 활성화  
 
 

@@ -1,6 +1,6 @@
 // src/screens/DetailPicAndText.js
 
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
-import axios from 'axios';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from './AuthContext'; // AuthContext 임포트
+import { useNavigation } from '@react-navigation/native'; // 네비게이션 훅 임포트
 
 // 헤어스타일 데이터
 const data = [
@@ -37,52 +35,7 @@ const data = [
 
 const DetailPicAndText = () => {
   const { userId } = useContext(AuthContext); // AuthContext에서 userId 가져오기
-  const [loading, setLoading] = useState(false); // 로딩 상태 관리
-
-  // 헤어스타일명을 기반으로 백엔드에 GET 요청 보내기
-  const sendTitleToBackend = async (title) => {
-    if (!userId) {
-      Alert.alert('오류', '로그인이 필요합니다.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // GET 요청을 보내고 바이너리 데이터를 받기 위해 responseType 설정
-      const response = await axios.get('https://hairclip.store/api/hairstyle', {
-        params: { name: title },
-        responseType: 'arraybuffer', // 바이너리 데이터 받기 위해 설정
-      });
-
-      console.log(`헤어스타일 요청 완료: ${title}`);
-
-      // 요청이 완료되면 Home 화면으로 네비게이션
-      Alert.alert(
-        '요청 완료',
-        `${title} 헤어스타일 합성 요청이 전송되었습니다.`,
-        [
-          {
-            text: '확인',
-            onPress: () => navigationToHome(),
-          },
-        ],
-        { cancelable: false }
-      );
-    } catch (error) {
-      console.error('백엔드 요청 오류:', error);
-      Alert.alert('오류', '헤어스타일 합성 요청에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Home 화면으로 네비게이션하는 함수
-  const navigationToHome = () => {
-    // 현재 네비게이션 객체가 없는 경우 useNavigation 훅 사용
-    // SafeAreaView 외에 네비게이션을 사용하려면 useNavigation 훅을 이용하거나 props로 전달해야 합니다.
-    // 여기서는 useNavigation을 사용하여 네비게이션 객체를 가져옵니다.
-    navigation.replace('Home');
-  };
+  const navigation = useNavigation(); // 네비게이션 훅 사용
 
   // 카드 클릭 시 호출되는 함수
   const handleCardPress = (title) => {
@@ -97,7 +50,7 @@ const DetailPicAndText = () => {
         },
         {
           text: '확인',
-          onPress: () => sendTitleToBackend(title),
+          onPress: () => navigation.navigate('ProgressAndImage', { title }),
         },
       ],
       { cancelable: true }
@@ -120,9 +73,6 @@ const DetailPicAndText = () => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* 로딩 인디케이터 */}
-        {loading && <ActivityIndicator size="large" color="#3EB489" style={styles.activityIndicator} />}
       </View>
     </SafeAreaView>
   );
