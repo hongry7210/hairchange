@@ -47,7 +47,7 @@ const DetailPicAndText = () => {
   // 카드 클릭 시 호출되는 함수
   const handleCardPress = (title) => {
     Alert.alert(
-      '합성 요청',
+      '헤어스타일 합성 요청',
       `선택한 헤어스타일: ${title}\n해당 헤어스타일을 합성 요청하시겠습니까?`,
       [
         {
@@ -68,7 +68,17 @@ const DetailPicAndText = () => {
   };
 
   // 헤어스타일 합성 요청을 처리하는 함수
-  const initiateHairstyleRequest = (title) => {
+  const initiateHairstyleRequest = async (title) => {
+    if (!userId) {
+      Alert.alert('오류', '로그인이 필요합니다.', [
+        {
+          text: '확인',
+          onPress: () => {}, // 필요 시 로그인 화면으로 이동하는 로직 추가
+        },
+      ]);
+      return;
+    }
+
     setIsRequesting(true);
     setProgress(0);
     setImage(null);
@@ -97,17 +107,6 @@ const DetailPicAndText = () => {
 
     // 백엔드에 헤어스타일 요청을 보내는 함수
     const sendTitleToBackend = async () => {
-      if (!userId) {
-        Alert.alert('오류', '로그인이 필요합니다.', [
-          {
-            text: '확인',
-            onPress: () => {}, // 필요 시 로그인 화면으로 이동하는 로직 추가
-          },
-        ]);
-        setIsRequesting(false);
-        return;
-      }
-
       try {
         // 백엔드에 GET 요청 보내기
         const response = await axios.get('https://hairclip.store/api/hairstyle', {
@@ -147,7 +146,9 @@ const DetailPicAndText = () => {
             onPress: () => {}, // 필요 시 이전 화면으로 이동하는 로직 추가
           },
         ]);
-        setIsRequesting(false);
+        if (isMounted) {
+          setIsRequesting(false);
+        }
       }
     };
 
@@ -165,6 +166,14 @@ const DetailPicAndText = () => {
       }
     };
   };
+
+  // 이미지와 프로그레스 상태를 모니터링하여 프로그레스가 0.95에 도달했을 때 이미지를 수신했다면 프로그레스를 1로 설정
+  useEffect(() => {
+    if (image && progress >= 0.95) {
+      setProgress(1);
+      setShowImageButton(true);
+    }
+  }, [image, progress]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
