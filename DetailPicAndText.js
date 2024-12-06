@@ -1,6 +1,6 @@
 // DetailPicAndText.js
 
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from './AuthContext'; // AuthContext 임포트
-import { useNavigation } from '@react-navigation/native'; // 네비게이션 훅 임포트
+import axios from 'axios';
+import * as Progress from 'react-native-progress';
+import { Buffer } from 'buffer'; // Buffer 임포트
 
 // 헤어스타일 데이터
 const data = [
@@ -34,8 +37,12 @@ const data = [
 ];
 
 const DetailPicAndText = () => {
-  const { setCurrentRequest } = useContext(AuthContext); // AuthContext에서 setCurrentRequest 가져오기
-  const navigation = useNavigation(); // 네비게이션 훅 사용
+  const { setCurrentRequest, userId } = useContext(AuthContext); // AuthContext에서 setCurrentRequest 및 userId 가져오기
+  const [progress, setProgress] = useState(0); // 프로그레스 바 상태
+  const [image, setImage] = useState(null); // 생성된 이미지 상태
+  const [showImageButton, setShowImageButton] = useState(false); // "사진 확인하기" 버튼 상태
+  const [showImage, setShowImage] = useState(false); // 이미지 표시 상태
+  const [isRequesting, setIsRequesting] = useState(false); // 요청 중 여부
 
   // 카드 클릭 시 호출되는 함수
   const handleCardPress = (title) => {
@@ -52,12 +59,111 @@ const DetailPicAndText = () => {
           text: '확인',
           onPress: () => {
             setCurrentRequest(title); // 현재 요청 설정
-            navigation.navigate('ProgressAndImage', { title });
+            initiateHairstyleRequest(title); // 요청 시작
           },
         },
       ],
       { cancelable: true }
     );
+  };
+
+  // 헤어스타일 합성 요청을 처리하는 함수
+  const initiateHairstyleRequest = (title) => {
+    setIsRequesting(true);
+    setProgress(0);
+    setImage(null);
+    setShowImageButton(false);
+    setShowImage(false);
+
+    let isMounted = true; // 메모리 누수를 방지하기 위한 변수
+    let progressInterval = null;
+
+    // 프로그레스 바를 0에서 0.95까지 4분 동안 채우는 함수
+    const startProgress = () => {
+      const totalSeconds = 240; // 4분
+      const incrementPerSecond = 0.95 / totalSeconds; // 초당 프로그레스 증가량 (~0.003958)
+
+      progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          const newProgress = prev + incrementPerSecond;
+          if (newProgress >= 0.95) {
+            clearInterval(progressInterval);
+            return 0.95;
+          }
+          return newProgress;
+        });
+      }, 1000); // 1초 간격으로 업데이트
+    };
+
+    // 백엔드에 헤어스타일 요청을 보내는 함수
+    const sendTitleToBackend = async () => {
+      if (!userId) {
+        Alert.alert('오류', '로그인이 필요합니다.', [
+          {
+            text: '확인',
+            onPress: () => {}, // 필요 시 로그인 화면으로 이동하는 로직 추가
+          },
+        ]);
+        setIsRequesting(false);
+        return;
+      }
+
+      try {
+        // 백엔드에 GET 요청 보내기
+        const response = await axios.get('https://hairclip.store/api/hairstyle', {
+          params: { name: title },
+          responseType: 'arraybuffer', // 바이너리 데이터 받기 위해 설정
+        });
+
+        console.log(`헤어스타일 요청 완료: ${title}`);
+
+        // 응답 데이터를 base64로 변환
+        const base64Image = Buffer.from(response.data, 'binary').toString('base64');
+
+        if (isMounted) {
+          setImage(`data:image/jpeg;base64,${base64Image}`);
+          setProgress(1);
+          setShowImageButton(true);
+          setIsRequesting(false);
+
+          // 사용자에게 알림 표시
+          Alert.alert(
+            '요청 완료',
+            `${title} 헤어스타일 합성 요청이 완료되었습니다.`,
+            [
+              {
+                text: '확인',
+                onPress: () => {}, // 필요 시 특정 동작 추가
+              },
+            ],
+            { cancelable: false }
+          );
+        }
+      } catch (error) {
+        console.error('백엔드 요청 오류:', error);
+        Alert.alert('오류', '헤어스타일 합성 요청에 실패했습니다.', [
+          {
+            text: '확인',
+            onPress: () => {}, // 필요 시 이전 화면으로 이동하는 로직 추가
+          },
+        ]);
+        setIsRequesting(false);
+      }
+    };
+
+    // 프로그레스 바 시작
+    startProgress();
+
+    // 백엔드 요청 보내기
+    sendTitleToBackend();
+
+    // cleanup 함수
+    return () => {
+      isMounted = false;
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
   };
 
   return (
@@ -68,14 +174,42 @@ const DetailPicAndText = () => {
         </View>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {data.map((item) => (
-            <TouchableOpacity key={item.id} onPress={() => handleCardPress(item.title)}>
-              <View style={styles.card}>
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => handleCardPress(item.title)}
+              disabled={isRequesting} // 요청 중일 때는 선택 불가
+            >
+              <View style={[styles.card, isRequesting && styles.cardDisabled]}>
                 <Image source={item.image} style={styles.image} />
                 <Text style={styles.text}>{item.title}</Text>
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {/* 프로그레스 바 및 로딩 인디케이터 */}
+        {isRequesting && (
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressText}>합성 중...</Text>
+            <Progress.Bar progress={progress} width={200} color="#3EB489" />
+            <ActivityIndicator size="large" color="#3EB489" style={styles.activityIndicator} />
+          </View>
+        )}
+
+        {/* "사진 확인하기" 버튼 */}
+        {showImageButton && (
+          <TouchableOpacity style={styles.button} onPress={() => setShowImage(true)}>
+            <Text style={styles.buttonText}>사진 확인하기</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 생성된 이미지 표시 */}
+        {showImage && image && (
+          <View style={styles.imageContainer}>
+            <Text style={styles.imageTitle}>합성된 헤어스타일</Text>
+            <Image source={{ uri: image }} style={styles.generatedImage} />
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -117,6 +251,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     alignItems: 'center', // 세로 정렬을 중앙으로 맞춤
   },
+  cardDisabled: {
+    opacity: 0.5,
+  },
   image: {
     width: 100, // 고정된 너비로 조정
     height: 100, // 고정된 높이로 조정
@@ -129,8 +266,44 @@ const styles = StyleSheet.create({
     color: '#333',
     flexWrap: 'wrap', // 텍스트가 여러 줄로 표시되도록 설정
   },
-  activityIndicator: {
+  progressContainer: {
+    alignItems: 'center',
     marginTop: 20,
+  },
+  progressText: {
+    fontSize: 18,
+    marginBottom: 10,
+    color: '#333',
+  },
+  activityIndicator: {
+    marginTop: 10,
+  },
+  button: {
+    marginTop: 20,
+    backgroundColor: '#3EB489',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  imageContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  imageTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1c1c1c',
+    marginBottom: 10,
+  },
+  generatedImage: {
+    width: 300,
+    height: 300,
+    borderRadius: 10,
   },
 });
 

@@ -64,13 +64,6 @@ export default function App() {
               component={DetailPicAndText}
               options={{ title: '상세 정보' }}
             />
-            {/* ProgressAndImageScreen 추가 */}
-            <Stack.Screen
-              name="ProgressAndImage"
-              component={ProgressAndImageScreen}
-              options={{ title: '합성 진행' }}
-            />
-
 
           </Stack.Navigator>
         </NavigationContainer>
