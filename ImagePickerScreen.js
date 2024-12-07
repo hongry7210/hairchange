@@ -47,6 +47,34 @@ const ImagePickerScreen = () => {
                     setSelectedImage(null);
                     return;
                 }
+                setSelectedImage(asset);
+            }
+        });
+    };
+
+    const takePhoto = () => { // 촬영 기능 추가
+        const options = {
+            mediaType: 'photo',
+            includeBase64: true,
+            quality: 1,
+        };
+
+        launchCamera(options, (response) => {
+            if (response.didCancel) {
+                Alert.alert('취소', '사진 촬영이 취소되었습니다.');
+            } else if (response.errorCode) {
+                Alert.alert('에러', response.errorMessage);
+            } else if (response.assets && response.assets.length > 0) {
+                const asset = response.assets[0];
+                
+                // 파일 형식 검증
+                if (asset.type !== 'image/jpeg') {
+                    Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
+                    console.log("jpg파일 아님");
+                    console.log(asset.type);
+                    setSelectedImage(null);
+                    return;
+                }
                 Alert.alert(asset.fileName);
                 setSelectedImage(asset);
             }
@@ -115,6 +143,12 @@ const ImagePickerScreen = () => {
                             <Icon name="trash-outline" size={20} color="#ffffff" />
                         </TouchableOpacity>
                     )}
+                </TouchableOpacity>
+
+                {/* 카메라 버튼 추가 */}
+                <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
+                    <Icon name="camera-outline" size={24} color="#ffffff" style={styles.cameraIcon} />
+                    <Text style={styles.buttonText}>카메라</Text>
                 </TouchableOpacity>
 
                 {uploading ? (
@@ -227,6 +261,29 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.6)',
         padding: 8,
         borderRadius: 20,
+    },
+    cameraButton: { // 촬영 버튼 스타일 수정
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1E90FF', // 파란색
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
+        marginTop: 20,
+        width: width * 0.8,
+        justifyContent: 'center',
+    },
+    cameraIcon: {
+        marginRight: 10,
+    },
+    cameraButtonText: { // 촬영 버튼 텍스트 스타일 추가
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '500',
     },
 });
 
