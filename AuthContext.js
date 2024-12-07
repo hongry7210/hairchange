@@ -19,8 +19,12 @@ export const AuthProvider = ({ children }) => {
         const loadUser = async () => {
             try {
                 const storedUserId = await AsyncStorage.getItem('userId');
+                const storedImageFileNames = await AsyncStorage.getItem('imageFileNames');
                 if (storedUserId) {
                     setUserId(storedUserId);
+                }
+                if (storedImageFileNames) {
+                    setImageFileNames(JSON.parse(storedImageFileNames));
                 }
             } catch (error) {
                 console.error('사용자 정보 로드 오류:', error);
@@ -32,6 +36,18 @@ export const AuthProvider = ({ children }) => {
         loadUser();
     }, []);
 
+    useEffect(() => {
+        const saveImageFileNames = async () => {
+            try {
+                await AsyncStorage.setItem('imageFileNames', JSON.stringify(imageFileNames));
+            } catch (error) {
+                console.error('이미지 파일명 저장 오류:', error);
+            }
+        };
+
+        saveImageFileNames();
+    }, [imageFileNames]);
+    
     const login = async (id) => {
         try {
             await AsyncStorage.setItem('userId', id.toString());

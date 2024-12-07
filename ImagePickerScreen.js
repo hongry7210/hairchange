@@ -128,11 +128,13 @@ const ImagePickerScreen = () => {
         }
 
         const { base64, uri } = selectedImage;
-        const fileName = uri.split('/').pop();
+        const originalFileName = uri.split('/').pop();
+
+        const generatedFileName = `generated_${Date.now()}_${originalFileName}`;
 
         const payload = {
             image: base64,
-            name: fileName || 'uploaded_image.jpg',
+            name: generatedFileName,
             type: 'image/jpeg',
         };
 
@@ -144,9 +146,9 @@ const ImagePickerScreen = () => {
                     'Content-Type': 'application/json',
                 },
             });
+            Alert.alert(generatedFileName);
             Alert.alert('성공', '이미지가 성공적으로 업로드되었습니다.');
-            console.log('성공');
-            addImageFileName(fileName);
+            addImageFileName(generatedFileName);
         } catch (error) {
             Alert.alert('업로드 실패', '사람의 얼굴을 인식할 수 없습니다.');
             console.error('Upload Error:', error);
