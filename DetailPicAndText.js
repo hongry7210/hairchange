@@ -91,7 +91,7 @@ const DetailPicAndText = () => {
     // 프로그레스 바를 0에서 0.95까지 4분 동안 채우는 함수
     const startProgress = () => {
       const totalSeconds = 240; // 4분
-      const incrementPerSecond = 0.95 / totalSeconds; // 초당 프로그레스 증가량 (~0.003958)
+      const incrementPerSecond = 0.95 / totalSeconds; 
 
       progressInterval = setInterval(() => {
         setProgress((prev) => {

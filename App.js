@@ -11,7 +11,6 @@ import LoginScreen from './LoginScreen'; // 로그인 화면
 import RegisterScreen from './RegisterScreen'; // 회원가입 화면
 import { AuthProvider } from './AuthContext'; // AuthContext 추가
 import UserImagesScreen from './UserImagesScreen';
-import ProgressAndImageScreen from './ProgressAndImageScreen'; 
 import { Buffer } from 'buffer'; // Buffer 임포트
 
 global.Buffer = Buffer; // Buffer 전역 설정
