@@ -1,4 +1,4 @@
-// ImagePickerScreen.js 
+// ImagePickerScreen.js
 
 import React, { useState } from 'react';
 import {
@@ -11,7 +11,7 @@ import {
     Text,
     Dimensions,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker'; // Expo ImagePicker 사용
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,82 +24,81 @@ const ImagePickerScreen = () => {
     const [uploading, setUploading] = useState(false);
     const navigation = useNavigation();
 
-    const selectImage = () => {
-        const options = {
-            mediaType: 'photo',
-            includeBase64: true,
-            quality: 1,
-        };
+    // 갤러리에서 이미지 선택
+    const selectImage = async () => {
+        // 갤러리 권한 요청
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('권한 필요', '사진 라이브러리에 접근할 수 있는 권한이 필요합니다.');
+            return;
+        }
 
-        launchImageLibrary(options, (response) => {
-            if (response.didCancel) {
-                Alert.alert('취소', '이미지 선택이 취소되었습니다.');
-            } else if (response.errorCode) {
-                Alert.alert('에러', response.errorMessage);
-            } else if (response.assets && response.assets.length > 0) {
-                const asset = response.assets[0];
-                
-                // 파일 형식 검증
-                if (asset.type !== 'image/jpeg') {
-                    Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
-                    console.log("jpg파일 아님");
-                    console.log(asset.type);
-                    setSelectedImage(null);
-                    return;
-                }
-                setSelectedImage(asset);
-            }
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            base64: true,
+            quality: 1,
         });
+
+        if (result.cancelled) {
+            Alert.alert('취소', '이미지 선택이 취소되었습니다.');
+        } else {
+            // 파일 확장자 검증
+            const fileExtension = result.uri.split('.').pop().toLowerCase();
+            if (fileExtension !== 'jpg' && fileExtension !== 'jpeg') {
+                Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
+                setSelectedImage(null);
+                return;
+            }
+
+            setSelectedImage(result);
+        }
     };
 
-    const takePhoto = () => { // 촬영 기능 추가
-        const options = {
-            mediaType: 'photo',
-            includeBase64: true,
-            quality: 1,
-        };
+    // 카메라로 사진 촬영
+    const takePhoto = async () => {
+        // 카메라 권한 요청
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('권한 필요', '카메라에 접근할 수 있는 권한이 필요합니다.');
+            return;
+        }
 
-        launchCamera(options, (response) => {
-            if (response.didCancel) {
-                Alert.alert('취소', '사진 촬영이 취소되었습니다.');
-            } else if (response.errorCode) {
-                Alert.alert('에러', response.errorMessage);
-            } else if (response.assets && response.assets.length > 0) {
-                const asset = response.assets[0];
-                
-                // 파일 형식 검증
-                if (asset.type !== 'image/jpeg') {
-                    Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
-                    console.log("jpg파일 아님");
-                    console.log(asset.type);
-                    setSelectedImage(null);
-                    return;
-                }
-                Alert.alert(asset.fileName);
-                setSelectedImage(asset);
-            }
+        let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            base64: true,
+            quality: 1,
+            saveToPhotos: true, // 촬영한 사진을 갤러리에 저장
         });
+
+        if (result.cancelled) {
+            Alert.alert('취소', '사진 촬영이 취소되었습니다.');
+        } else {
+            // 파일 확장자 검증
+            const fileExtension = result.uri.split('.').pop().toLowerCase();
+            if (fileExtension !== 'jpg' && fileExtension !== 'jpeg') {
+                Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
+                setSelectedImage(null);
+                return;
+            }
+
+            setSelectedImage(result);
+        }
     };
 
+    // 이미지 업로드
     const uploadImage = async () => {
         if (!selectedImage) {
             Alert.alert('오류', '업로드할 이미지를 선택해주세요.');
             return;
         }
 
-        // 추가적인 파일 형식 검증 (선택 사항)
-        if (selectedImage.type !== 'image/jpeg') {
-            Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
-            setSelectedImage(null);
-            return;
-        }
-
-        const { base64, fileName, type } = selectedImage;
+        const { base64, uri } = selectedImage;
+        const fileName = uri.split('/').pop();
 
         const payload = {
             image: base64,
-            name: fileName || asset.fileName,
-            type: type || 'image/jpeg',
+            name: fileName || 'uploaded_image.jpg',
+            type: 'image/jpeg',
         };
 
         setUploading(true);
@@ -148,7 +147,7 @@ const ImagePickerScreen = () => {
                 {/* 카메라 버튼 추가 */}
                 <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
                     <Icon name="camera-outline" size={24} color="#ffffff" style={styles.cameraIcon} />
-                    <Text style={styles.buttonText}>카메라</Text>
+                    <Text style={styles.cameraButtonText}>촬영</Text>
                 </TouchableOpacity>
 
                 {uploading ? (
