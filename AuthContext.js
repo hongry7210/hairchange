@@ -9,6 +9,11 @@ export const AuthProvider = ({ children }) => {
     const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentRequest, setCurrentRequest] = useState(null); // 현재 요청 상태 추가
+    const [imageFileNames, setImageFileNames] = useState([]); // 이미지 파일명 목록
+
+    const addImageFileName = (fileName) => {
+        setImageFileNames((prevFileNames) => [...prevFileNames, fileName]);
+    };
 
     useEffect(() => {
         const loadUser = async () => {
@@ -48,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ userId, login, logout, isLoading, currentRequest, setCurrentRequest }}>
+        <AuthContext.Provider value={{ userId, login, logout, isLoading, currentRequest, setCurrentRequest, imageFileNames, addImageFileName,}}>
             {children}
         </AuthContext.Provider>
     );

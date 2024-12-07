@@ -16,6 +16,8 @@ import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from './AuthContext'; // AuthContext 임포트
+import { useContext } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -23,7 +25,8 @@ const ImagePickerScreen = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [uploading, setUploading] = useState(false);
     const navigation = useNavigation();
-
+    const { addImageFileName } = useContext(AuthContext); // AuthContext에서 addImageFileName 가져오기
+    
     // 파일 확장자 및 유형 검증
     const validateImage = (asset) => {
         const { uri, type } = asset;
@@ -143,9 +146,11 @@ const ImagePickerScreen = () => {
             });
             Alert.alert('성공', '이미지가 성공적으로 업로드되었습니다.');
             console.log('성공');
+            addImageFileName(fileName);
         } catch (error) {
-            Alert.alert('업로드 실패', '이미지 업로드에 실패했습니다.');
+            Alert.alert('업로드 실패', '사람의 얼굴을 인식할 수 없습니다.');
             console.error('Upload Error:', error);
+            navigation.navigate("Home");
         } finally {
             setSelectedImage(null); // 업로드 후 이미지 초기화
             console.log("이미지 초기화");

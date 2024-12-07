@@ -44,7 +44,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleNavigateProgress = () => {
     if (currentRequest) {
-      navigation.navigate('ProgressAndImage', { title: currentRequest });
+      navigation.navigate('DetailPicAndText', { title: currentRequest });
     } else {
       Alert.alert('알림', '진행중인 사진 가공이 없습니다!');
     }
