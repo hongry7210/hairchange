@@ -24,64 +24,96 @@ const ImagePickerScreen = () => {
     const [uploading, setUploading] = useState(false);
     const navigation = useNavigation();
 
+    // 파일 확장자 및 유형 검증
+    const validateImage = (asset) => {
+        const { uri, type } = asset;
+
+        // 파일 확장자 검증
+        const fileExtension = uri.split('.').pop().toLowerCase();
+        const isJpg = fileExtension === 'jpg' || fileExtension === 'jpeg';
+
+        // 파일 유형 검증
+        const isImage = type && type.startsWith('image');
+
+        return isJpg && isImage;
+    };
+
     // 갤러리에서 이미지 선택
     const selectImage = async () => {
-        // 갤러리 권한 요청
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('권한 필요', '사진 라이브러리에 접근할 수 있는 권한이 필요합니다.');
-            return;
-        }
-
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            base64: true,
-            quality: 1,
-        });
-
-        if (result.cancelled) {
-            Alert.alert('취소', '이미지 선택이 취소되었습니다.');
-        } else {
-            // 파일 확장자 검증
-            const fileExtension = result.uri.split('.').pop().toLowerCase();
-            if (fileExtension !== 'jpg' && fileExtension !== 'jpeg') {
-                Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
-                setSelectedImage(null);
+        try {
+            // 갤러리 권한 요청
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('권한 필요', '사진 라이브러리에 접근할 수 있는 권한이 필요합니다.');
                 return;
             }
 
-            setSelectedImage(result);
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                base64: true,
+                quality: 1,
+            });
+
+            console.log('Gallery Result:', result); // 디버깅 로그
+
+            if (result.canceled) {
+                Alert.alert('취소', '이미지 선택이 취소되었습니다.');
+            } else if (result.assets && result.assets.length > 0) {
+                const asset = result.assets[0];
+                
+                if (!validateImage(asset)) {
+                    Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
+                    setSelectedImage(null);
+                    return;
+                }
+
+                setSelectedImage(asset);
+            } else {
+                Alert.alert('오류', '이미지 선택에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('selectImage Error:', error);
+            Alert.alert('오류', '이미지 선택 중 오류가 발생했습니다.');
         }
     };
 
     // 카메라로 사진 촬영
     const takePhoto = async () => {
-        // 카메라 권한 요청
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('권한 필요', '카메라에 접근할 수 있는 권한이 필요합니다.');
-            return;
-        }
-
-        let result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            base64: true,
-            quality: 1,
-            saveToPhotos: true, // 촬영한 사진을 갤러리에 저장
-        });
-
-        if (result.cancelled) {
-            Alert.alert('취소', '사진 촬영이 취소되었습니다.');
-        } else {
-            // 파일 확장자 검증
-            const fileExtension = result.uri.split('.').pop().toLowerCase();
-            if (fileExtension !== 'jpg' && fileExtension !== 'jpeg') {
-                Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
-                setSelectedImage(null);
+        try {
+            // 카메라 권한 요청
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('권한 필요', '카메라에 접근할 수 있는 권한이 필요합니다.');
                 return;
             }
 
-            setSelectedImage(result);
+            let result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                base64: true,
+                quality: 1,
+                saveToPhotos: true, // 촬영한 사진을 갤러리에 저장
+            });
+
+            console.log('Camera Result:', result); // 디버깅 로그
+
+            if (result.canceled) {
+                Alert.alert('취소', '사진 촬영이 취소되었습니다.');
+            } else if (result.assets && result.assets.length > 0) {
+                const asset = result.assets[0];
+                
+                if (!validateImage(asset)) {
+                    Alert.alert('오류', 'jpg 파일만 업로드할 수 있습니다.');
+                    setSelectedImage(null);
+                    return;
+                }
+
+                setSelectedImage(asset);
+            } else {
+                Alert.alert('오류', '사진 촬영에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('takePhoto Error:', error);
+            Alert.alert('오류', '사진 촬영 중 오류가 발생했습니다.');
         }
     };
 
@@ -113,7 +145,7 @@ const ImagePickerScreen = () => {
             console.log('성공');
         } catch (error) {
             Alert.alert('업로드 실패', '이미지 업로드에 실패했습니다.');
-            console.error(error);
+            console.error('Upload Error:', error);
         } finally {
             setSelectedImage(null); // 업로드 후 이미지 초기화
             console.log("이미지 초기화");
