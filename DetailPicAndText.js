@@ -178,46 +178,51 @@ const DetailPicAndText = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>헤어스타일 선택</Text>
-        </View>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => handleCardPress(item.title)}
-              disabled={isRequesting} // 요청 중일 때는 선택 불가
-            >
-              <View style={[styles.card, isRequesting && styles.cardDisabled]}>
-                <Image source={item.image} style={styles.image} />
-                <Text style={styles.text}>{item.title}</Text>
+        {isRequesting ? (
+          // 요청 중일 때는 프로그레스 바만 중앙에 표시
+          <View style={styles.progressOverlay}>
+            <View style={styles.progressContainer}>
+              <Text style={styles.progressText}>합성 중...</Text>
+              <Progress.Bar progress={progress} width={200} color="#3EB489" />
+              <ActivityIndicator size="large" color="#3EB489" style={styles.activityIndicator} />
+            </View>
+          </View>
+        ) : (
+          // 요청 중이 아닐 때는 리스트와 필요 시 버튼 및 이미지 표시
+          <>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>헤어스타일 선택</Text>
+            </View>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+              {data.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => handleCardPress(item.title)}
+                  disabled={isRequesting} // 요청 중일 때는 선택 불가
+                >
+                  <View style={[styles.card, isRequesting && styles.cardDisabled]}>
+                    <Image source={item.image} style={styles.image} />
+                    <Text style={styles.text}>{item.title}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* "사진 확인하기" 버튼 */}
+            {showImageButton && (
+              <TouchableOpacity style={styles.button} onPress={() => setShowImage(true)}>
+                <Text style={styles.buttonText}>사진 확인하기</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 생성된 이미지 표시 */}
+            {showImage && image && (
+              <View style={styles.imageContainer}>
+                <Text style={styles.imageTitle}>합성된 헤어스타일</Text>
+                <Image source={{ uri: image }} style={styles.generatedImage} />
               </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* 프로그레스 바 및 로딩 인디케이터 */}
-        {isRequesting && (
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressText}>합성 중...</Text>
-            <Progress.Bar progress={progress} width={200} color="#3EB489" />
-            <ActivityIndicator size="large" color="#3EB489" style={styles.activityIndicator} />
-          </View>
-        )}
-
-        {/* "사진 확인하기" 버튼 */}
-        {showImageButton && (
-          <TouchableOpacity style={styles.button} onPress={() => setShowImage(true)}>
-            <Text style={styles.buttonText}>사진 확인하기</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* 생성된 이미지 표시 */}
-        {showImage && image && (
-          <View style={styles.imageContainer}>
-            <Text style={styles.imageTitle}>합성된 헤어스타일</Text>
-            <Image source={{ uri: image }} style={styles.generatedImage} />
-          </View>
+            )}
+          </>
         )}
       </View>
     </SafeAreaView>
@@ -275,9 +280,14 @@ const styles = StyleSheet.create({
     color: '#333',
     flexWrap: 'wrap', // 텍스트가 여러 줄로 표시되도록 설정
   },
+  progressOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(242, 242, 242, 0.8)', // 약간의 투명 배경
+  },
   progressContainer: {
     alignItems: 'center',
-    marginTop: 20,
   },
   progressText: {
     fontSize: 18,

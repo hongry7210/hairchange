@@ -12,12 +12,12 @@ import {
     Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker'; // Expo ImagePicker 사용
+import * as ImageManipulator from 'expo-image-manipulator'; // 이미지 조작 라이브러리
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from './AuthContext'; // AuthContext 임포트
-import { useContext } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -51,9 +51,10 @@ const ImagePickerScreen = () => {
                 return;
             }
 
+            //이미지 선택 창 열기
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                base64: true,
+                base64: false,
                 quality: 1,
             });
 
@@ -70,7 +71,10 @@ const ImagePickerScreen = () => {
                     return;
                 }
 
-                setSelectedImage(asset);
+                const compressedImage = await compressImage(asset.uri);
+                if (compressedImage) { // 압축이 성공한 경우
+                    setSelectedImage(compressedImage); // 압축된 이미지 상태에 저장
+                }
             } else {
                 Alert.alert('오류', '이미지 선택에 실패했습니다.');
             }
@@ -92,7 +96,7 @@ const ImagePickerScreen = () => {
 
             let result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                base64: true,
+                base64: false,
                 quality: 1,
                 saveToPhotos: true, // 촬영한 사진을 갤러리에 저장
             });
@@ -110,13 +114,33 @@ const ImagePickerScreen = () => {
                     return;
                 }
 
-                setSelectedImage(asset);
+                const compressedImage = await compressImage(asset.uri);
+                if (compressedImage) { // 압축이 성공한 경우
+                    setSelectedImage(compressedImage); // 압축된 이미지 상태에 저장
+                }
             } else {
                 Alert.alert('오류', '사진 촬영에 실패했습니다.');
             }
         } catch (error) {
             console.error('takePhoto Error:', error);
             Alert.alert('오류', '사진 촬영 중 오류가 발생했습니다.');
+        }
+    };
+
+    // 이미지 압축 함수
+    const compressImage = async (uri) => {
+        try {
+            // ImageManipulator를 사용하여 이미지 크기 조정 및 압축
+            const manipulatedImage = await ImageManipulator.manipulateAsync(
+                uri,
+                [{ resize: { width: 800 } }], // 너비를 800px로 조정 (높이는 비율에 따라 자동 조정)
+                { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true } // 압축 비율 0.6, JPEG 형식, Base64 문자열 반환
+            );
+            return manipulatedImage; // 조작된 이미지 반환
+        } catch (error) {
+            console.error('Image Manipulation Error:', error); // 에러 로그 출력
+            Alert.alert('오류', '이미지 압축 중 오류가 발생했습니다.'); // 사용자에게 알림
+            return null; // 에러 발생 시 null 반환
         }
     };
 
@@ -130,7 +154,7 @@ const ImagePickerScreen = () => {
         const { base64, uri } = selectedImage;
         const originalFileName = uri.split('/').pop();
 
-        const generatedFileName = `generated_${Date.now()}_${originalFileName}`;
+        const generatedFileName = `${Date.now()}_${originalFileName}`;
 
         const payload = {
             image: base64,
@@ -149,15 +173,22 @@ const ImagePickerScreen = () => {
             Alert.alert(generatedFileName);
             Alert.alert('성공', '이미지가 성공적으로 업로드되었습니다.');
             addImageFileName(generatedFileName);
-        } catch (error) {
-            Alert.alert('업로드 실패', '사람의 얼굴을 인식할 수 없습니다.');
-            console.error('Upload Error:', error);
-            navigation.navigate("Home");
-        } finally {
             setSelectedImage(null); // 업로드 후 이미지 초기화
             console.log("이미지 초기화");
             setUploading(false);
             navigation.navigate('DetailPicAndText'); // 업로드 완료 후 DetailPicAndText로 이동
+        } catch (error) {
+            let errorMessage = '업로드 실패'; // 기본 에러 메시지
+            if (error.response && error.response.data) { // 서버에서 반환한 에러 메시지가 있는 경우
+                errorMessage += `: ${error.response.data}`;
+            } else if (error.message) { // 네트워크 에러 등 기타 에러 메시지
+                errorMessage += `: ${error.message}`;
+            } else { // 기타 에러
+                errorMessage += ': 서버와의 연결에 문제가 있습니다.';
+            }
+
+            Alert.alert('업로드 실패', errorMessage); // 에러 메시지 표시
+            navigation.navigate("Home"); // 업로드 실패 시 홈 화면으로 이동
         }
     };
 
