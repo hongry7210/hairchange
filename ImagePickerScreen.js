@@ -18,7 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from './AuthContext'; // AuthContext 임포트
-
+import { useContext } from 'react'; 
 const { width } = Dimensions.get('window');
 
 const ImagePickerScreen = () => {
