@@ -31,7 +31,7 @@ const UserImagesScreen = () => {
             // 이미지 파일명을 기반으로 이미지 URL 생성
             const updatedImages = imageFileNames.map((fileName) => ({
                 fileName: fileName,
-                uri: `http://ec2-3-36-143-220.ap-northeast-2.compute.amazonaws.com/image_storage/synthesis/${fileName}`,
+                uri: `https://ec2-3-36-143-220.ap-northeast-2.compute.amazonaws.com/image_storage/synthesis/${fileName}`,
                 title: `헤어스타일 ${fileName.replace('generated_', '').replace('.jpg', '').replace(/_/g, ' ')}`,
             }));
             setImages(updatedImages); // 업데이트된 이미지 목록 설정
