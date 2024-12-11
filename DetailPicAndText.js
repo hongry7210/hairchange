@@ -89,17 +89,17 @@ const DetailPicAndText = () => {
     let isMounted = true; // 메모리 누수를 방지하기 위한 변수
     let progressInterval = null;
 
-    // 프로그레스 바를 0에서 0.95까지 3분 동안 채우는 함수
+    // 프로그레스 바를 0에서 0.95까지 7분 동안 채우는 함수
     const startProgress = () => {
-      const totalSeconds = 180; // 3 minutes
-      const incrementPerSecond = 0.95 / totalSeconds; 
+      const totalSeconds = 420; // 5 minutes
+      const incrementPerSecond = 0.97 / totalSeconds; 
 
       progressInterval = setInterval(() => {
         setProgress((prev) => {
           const newProgress = prev + incrementPerSecond;
-          if (newProgress >= 0.95) {
+          if (newProgress >= 0.97) {
             clearInterval(progressInterval);
-            return 0.95;
+            return 0.97;
           }
           return newProgress;
         });
@@ -113,7 +113,7 @@ const DetailPicAndText = () => {
         const response = await axios.get('https://hairclip.store/api/hairstyle', {
           params: { name: title },
           responseType: 'arraybuffer', // 바이너리 데이터 받기 위해 설정
-          timeout: 300000, // 5minutes in milliseconds
+          timeout: 600000, // 7minutes in milliseconds
         });
 
         // 응답 데이터를 base64로 변환
@@ -177,9 +177,9 @@ const DetailPicAndText = () => {
     };
   };
 
-  // 이미지와 프로그레스 상태를 모니터링하여 프로그레스가 0.95에 도달했을 때 이미지를 수신했다면 프로그레스를 1로 설정
+  // 이미지와 프로그레스 상태를 모니터링하여 프로그레스가 0.97에 도달했을 때 이미지를 수신했다면 프로그레스를 1로 설정
   useEffect(() => {
-    if (image && progress >= 0.95) {
+    if (image && progress >= 0.97) {
       setProgress(1);
       setShowImageButton(true);
     }
