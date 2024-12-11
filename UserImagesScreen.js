@@ -56,22 +56,7 @@ const UserImagesScreen = () => {
             images: imageFileNames,
         };
 
-        try {
-            const response = await axios.post('https://hairclip.store/api/user-images', payload, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            console.log('Send User Images Response:', response.data);
-            // 필요에 따라 응답 처리
-            // 예: 백엔드로부터 받은 데이터로 추가 처리
-        } catch (error) {
-            console.error('Send User Images Error:', error);
-            Alert.alert('오류', '이미지 데이터를 전송하는 중 오류가 발생했습니다.');
-        } finally {
-            setSending(false);
-        }
+        
     };
 
     useEffect(() => {

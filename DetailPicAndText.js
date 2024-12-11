@@ -43,6 +43,7 @@ const DetailPicAndText = () => {
   const [showImageButton, setShowImageButton] = useState(false); // "사진 확인하기" 버튼 상태
   const [showImage, setShowImage] = useState(false); // 이미지 표시 상태
   const [isRequesting, setIsRequesting] = useState(false); // 요청 중 여부
+  const [hasRequested, setHasRequested] = useState(false); // 요청 완료 여부 상태
 
   // 카드 클릭 시 호출되는 함수
   const handleCardPress = (title) => {
@@ -88,9 +89,9 @@ const DetailPicAndText = () => {
     let isMounted = true; // 메모리 누수를 방지하기 위한 변수
     let progressInterval = null;
 
-    // 프로그레스 바를 0에서 0.95까지 10분 동안 채우는 함수
+    // 프로그레스 바를 0에서 0.95까지 3분 동안 채우는 함수
     const startProgress = () => {
-      const totalSeconds = 600; // 10 minutes
+      const totalSeconds = 180; // 3 minutes
       const incrementPerSecond = 0.95 / totalSeconds; 
 
       progressInterval = setInterval(() => {
@@ -112,7 +113,7 @@ const DetailPicAndText = () => {
         const response = await axios.get('https://hairclip.store/api/hairstyle', {
           params: { name: title },
           responseType: 'arraybuffer', // 바이너리 데이터 받기 위해 설정
-          timeout: 600000, // 10 minutes in milliseconds
+          timeout: 300000, // 5minutes in milliseconds
         });
 
         // 응답 데이터를 base64로 변환
@@ -123,7 +124,7 @@ const DetailPicAndText = () => {
           setProgress(1);
           setShowImageButton(true);
           setIsRequesting(false);
-
+          setHasRequested(true); // 요청 완료 상태로 설정
           // 프로그레스 인터벌 정지
           if (progressInterval) {
             clearInterval(progressInterval);
@@ -199,23 +200,27 @@ const DetailPicAndText = () => {
         ) : (
           // 요청 중이 아닐 때는 리스트와 필요 시 버튼 및 이미지 표시
           <>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>헤어스타일 선택</Text>
-            </View>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-              {data.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => handleCardPress(item.title)}
-                  disabled={isRequesting} // 요청 중일 때는 선택 불가
-                >
-                  <View style={[styles.card, isRequesting && styles.cardDisabled]}>
-                    <Image source={item.image} style={styles.image} />
-                    <Text style={styles.text}>{item.title}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+             {!hasRequested && (
+            <>
+              <View style={styles.header}>
+                <Text style={styles.headerTitle}>헤어스타일 선택</Text>
+              </View>
+              <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {data.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => handleCardPress(item.title)}
+                    disabled={isRequesting} // 요청 중일 때는 선택 불가
+                  >
+                    <View style={[styles.card, isRequesting && styles.cardDisabled]}>
+                      <Image source={item.image} style={styles.image} />
+                      <Text style={styles.text}>{item.title}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
 
             {/* "사진 확인하기" 버튼 */}
             {showImageButton && (

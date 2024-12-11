@@ -170,7 +170,6 @@ const ImagePickerScreen = () => {
                     'Content-Type': 'application/json',
                 },
             });
-            Alert.alert(generatedFileName);
             Alert.alert('성공', '이미지가 성공적으로 업로드되었습니다.');
             addImageFileName(generatedFileName);
             setSelectedImage(null); // 업로드 후 이미지 초기화
